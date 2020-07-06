@@ -1,28 +1,409 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <figure>
+      <img src="./assets/tpn-logo.png" alt="">
+    </figure>
+    <div class="container pt-3 pb-6">
+      <h1 class="title is-2 has-text-centered">Tudo Pela NHL - Hockey Stats</h1>
+      <p class="title is-4 has-text-centered">Find and share all the stats about a player</p>
+      <!-- form component -->
+      <div class="columns search-bar pb-3">
+        <div class="column is-3">
+          <div class="field">
+            <p class="control has-icons-left">
+              <span class="select">
+                <select name="league" @change="loadLeague">
+                  <option value="" selected>Select League</option>
+                  <option v-for="league in leagues" :value="league">{{league}}</option>
+                </select>  
+              </span>
+              <span class="icon is-small is-left">
+                <i class="fas fa-hockey-puck"></i>
+              </span>
+            </p>
+          </div>
+        </div>
+        <div class="column is-3" v-if="leagueSelected">
+          <div class="field">
+            <p class="control has-icons-left">
+              <span class="select">
+                <select name="league" @change="loadSeason">
+                  <option value="" selected>Select Season</option>
+                  <option v-for="season in seasons" :value="season">{{season}}</option>
+                </select> 
+              </span>
+              <span class="icon is-small is-left">
+                <i class="fas fa-calendar-alt"></i>
+              </span>
+            </p>
+          </div>
+        </div>
+        <div class="column is-3" v-if="seasonSelected" >
+          <div class="field">
+            <p class="control has-icons-left">
+              <span class="select">
+                <select name="teams" @change="loadTeamPlayers">
+                  <option value="" selected>Select Team</option>
+                  <option v-for="team in teams" :value="team.id">{{team.teamCity}} {{team.teamName}}</option>
+                </select>
+              </span>
+              <span class="icon is-small is-left">
+                <i class="fas fa-users"></i>
+              </span>
+            </p>
+          </div>
+        </div>
+        <div class="column is-3" v-if="players">
+          <div class="field">
+            <p class="control has-icons-left">
+              <span class="select">
+                <select name="selectPlayer" @change="loadPlayerStat">
+                  <option value="" selected>Select Player</option>
+                  <option v-for="player in players" :value="player.id">{{player.fullName}}</option>
+                </select>
+              </span>
+              <span class="icon is-small is-left">
+                <i class="fas fa-user"></i>
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div v-if="playerStats" class="player--wrapper">
+        <h3 class="player__title title">
+          #{{playerDetail.primaryNumber}} {{playerDetail.fullName}} 
+          <small v-if="playerDetail.captain">(C)</small>
+          <small v-if="playerDetail.rookie">(Rookie)</small>
+          <small v-if="playerDetail.alternateCaptain">(A)</small>
+        </h3>
+        <p class="player__title--complementary">
+          <span><b>Idade: </b>{{playerDetail.currentAge}}</span>
+          <span><b>Altura: </b>{{playerDetail.height}}<small>ft</small></span>
+          <span><b>Peso: </b>{{playerDetail.weight}}<small>lbs</small></span>
+          <span><b>Mão dominante: </b>
+            <span v-if="playerDetail.shootsCatches === 'L'">Canhoto</span>
+            <span v-else>Destro</span>
+          </span>
+        </p>
+        <div class="player__stats--table--wrapper mt-5">
+          <table v-if="playerDetail.position != 'G'" class="player__stats--table widefat" border="0" cellpadding="0" cellspacing="0">
+            <tbody>
+              <tr>
+                <th class="cell--image" rowspan="3">
+                  <a target="_new" :href="'https://www.nhl.com/player/'+playerDetail.id">
+                    <figure class="player__image">
+                      <img :alt="'Headshot of' + playerDetail.fullName" :src="playerDetail.image">
+                    </figure>
+                  </a>
+                </th>
+                <th title="Total de Jogos">GP</th>
+                <th title="Total de Pontos">PTS</th>
+                <th title="Total de Gols">G</th>
+                <th title="Total de Assistências">A</th>
+                <th title="Total de Mais/Menos">+/-</th>
+                <th title="Tempo ativamente no gelo">TOI</th>
+                <th title="Tempo total de penalidades">PIM</th>
+                <th title="Total de disparos ao gol">SHT</th>
+                <th title="Total de jogadas físicas contra o oponente">HIT</th>
+                <th title="Total de Gols decisivos">GWG</th>
+                <th title="Percentagem de disparos ao gol">SH%</th>
+              </tr>
+              <tr>
+                <td title="Total de Jogos">{{playerStats.games}}</td>
+                <td title="Total de Pontos">{{playerStats.points}}</td>
+                <td title="Total de Gols">{{playerStats.goals}}</td>
+                <td title="Total de Assistências">{{playerStats.assists}}</td>
+                <td title="Total de Mais/Menos">{{playerStats.plusMinus}}</td>
+                <td title="Tempo ativamente no gelo">{{playerStats.timeOnIce}}</td>
+                <td title="Tempo total de penalidades">{{playerStats.pim}}</td>
+                <td title="Total de disparos ao gol">{{playerStats.shots}}</td>
+                <td title="Total de jogadas físicas contra o oponente">{{playerStats.hits}}</td>
+                <td title="Total de Gols decisivos">{{playerStats.gameWinningGoals}}</td>
+                <td title="Percentagem de disparos ao gol">{{playerStats.shotPct}}</td>
+              </tr>
+            </tbody>
+          </table>
+          <table v-else class="player__stats--table widefat" border="0" cellpadding="0" cellspacing="0">
+            <tbody>
+              <tr>
+                <th class="cell--image" rowspan="3">
+                  <a target="_new" :href="'https://www.nhl.com/player/'+playerDetail.id">
+                    <figure class="player__image">
+                      <img :alt="'Headshot of' + playerDetail.fullName" :src="playerDetail.image">
+                    </figure>
+                  </a>
+                </th>
+                <th title="Total de Jogos">GP</th>
+                <th title="Total de Vitórias">W</th>
+                <th title="Total de Derrotas">L</th>
+                <th title="Total de Shutouts">Sh</th>
+                <th title="Média de Gols sofridos">GAA</th>
+                <th title="Porcentagem de Defesas">SV%</th>
+              </tr>
+              <tr>
+                <td title="Total de Jogos">{{playerStats.games}}</td>
+                <td title="Total de Vitórias">{{playerStats.wins}}</td>
+                <td title="Total de Derrotas">{{playerStats.losses}}</td>
+                <td title="Total de Shutouts">{{playerStats.shutouts}}</td>
+                <td title="Média de Gols sofridos">{{playerStats.goalAgainstAverage}}</td>
+                <td title="Porcentagem de Defesas">{{playerStats.savePercentage}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="notification is-warning mt-6">
+          <p>Copy and paste the code below to embed this table in your own blog.</p>
+          <div class="field has-addons">
+            <div class="control">
+              <input v-model="playerShare" class="input has-text-grey-light " type="text" placeholder="" readonly="">
+            </div>
+            <div class="control">
+              <button @click="shareURL" class="button is-info">
+                Copy
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
-<script>
-import HelloWorld from './components/HelloWorld.vue'
-
-export default {
-  name: 'app',
-  components: {
-    HelloWorld
-  }
-}
-</script>
-
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+  html {
+    height: 100%;
+  }
+  
+  body {
+    min-height: 100%;
+  }
 </style>
+
+<style scoped>
+
+  .search-bar {
+    border-bottom: solid 1px #ccc;
+  }
+
+  .notification .control,
+  .notification .control .input {
+    width: 100%;
+  }
+  /*
+  Overall Table Styles
+  */
+
+  .player--wrapper {
+    max-width: 900px;
+    margin: 1em auto;
+    padding-top: 1em;
+  }
+
+  .player--wrapper .player__title--complementary span {
+    display: inline-block;
+    padding-left: .5em;
+    padding-right: .5em;
+    position: relative;
+  }
+
+  .player--wrapper .player__title--complementary span::after {
+    content: '';
+    display: block;
+    height: 70%;
+    position: absolute;
+    left: 100%;
+    top: 15%;
+    width: 1px;
+
+    background-color: #000;
+  }
+
+  .player--wrapper .player__title--complementary span:first-child {
+    padding-left: 0;
+  }
+
+  .player--wrapper .player__title--complementary span:last-child::after {
+    content: none;
+  }
+
+  .player--wrapper .player__image {
+    margin: 0;
+    padding: 0;
+  }
+
+  .player--wrapper .player__image img {
+    display: block;
+  }
+
+/*
+  Player Table Responsive
+  */
+
+  .player--wrapper .player__stats--table--wrapper {
+    overflow: scroll;
+    position: relative;
+    width: 100%;
+
+    outline: #efefef;
+  }
+
+  @media screen and (max-width: 1024px) {
+    .player--wrapper .player__title--complementary span {
+      display: block;
+      padding-left: 0;
+    }
+
+    .player--wrapper .player__title--complementary span::after {
+      content: none;
+    }
+  }
+
+/*
+  Player Table
+  */
+
+
+  .player__stats--table {
+    width: 100%;
+  }
+
+  .player--wrapper .player__stats--table th,
+  .player--wrapper .player__stats--table td {
+    width: 66px;
+
+    border: 1px solid #e6e6e6;  
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .player--wrapper .player__stats--table th {
+    font-weight: bold;
+    background-color: #f9f9f9;
+  }
+
+  .player--wrapper .player__stats--table th.cell--image {
+    padding: 0;
+    margin: 0;
+    width: 168px;
+
+    background-color: #fff;
+  }
+
+/*
+  Legend Box
+  */
+
+  .player__stats--legend__list {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 1em;
+  }
+
+  .player__stats--legend--wrapper {
+    font-size: 16px;
+  }
+
+  .player__stats--legend--wrapper .showLegend {
+    padding: .5em;
+
+    font-variant: small-caps;
+    text-transform: lowercase;
+  }
+
+  .player__stats--legend__list {
+    margin: 0;
+    padding: 1em;
+    width: 100%;
+
+    background-color: #f9f9f9;
+    border: solid 1px #efefef;
+  }
+
+  .player__stats--legend__list dt, 
+  .player__stats--legend__list dd {
+    margin: 0;
+    line-height: 2.5;
+  }
+
+  .player__stats--legend__list dt {
+    flex-basis: 10%;
+  }
+
+  .player__stats--legend__list dd {
+    flex-basis: 40%;
+  }
+
+  @media screen and (max-width: 1024px) {
+    .player__stats--legend__list dt {
+      flex-basis: 30%;
+    }
+
+    .player__stats--legend__list dd {
+      flex-basis: 70%;
+    }
+  }
+
+
+  </style>
+
+  <script>
+  export default {
+    name: 'app',
+    methods:{
+      async loadLeague(e) {
+        this.leagueSelected = e.target.value;
+        this.teams = await this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/franchises?league=nhl`).then(teams => teams.data);
+        this.seasons = await this.$axios.get('https://statsapi.web.nhl.com/api/v1/seasons').then(seasons => seasons.data.seasons.map(item => item.seasonId).sort((a,b) => b - a));
+      },
+      async loadSeason(e) {
+        this.seasonSelected = e.target.value;
+      },
+      async loadTeamPlayers(e) {
+        this.teamSelected = e.target.value;
+        this.players = await this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/franchise?league=${this.leagueSelected}&team=${this.teamSelected}`).then(players => players.data);
+      },
+      async loadPlayerStat(e) {
+        this.playerSelected = e.target.value;
+        this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/player?league=nhl&id=${this.playerSelected}`).then(player => {
+          this.playerDetail = player.data;
+        });
+        this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/playerStats?league=nhl&id=${this.playerSelected}&season=${this.seasonSelected}`).then(stats => {
+          this.playerStats = stats.data;
+        });
+
+        const share = btoa(JSON.stringify({
+          team: this.teamSelected,
+          player: this.playerSelected,
+          season: this.seasonSelected,
+          league: this.leagueSelected
+        }));
+
+        this.playerShare = `<iframe width="900" height="250" frameborder="0" scrolling="no" src="${process.env.VUE_APP_FIREBASE_URL}/share?code=${share}"></iframe>`;
+      },
+      shareURL(){
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(this.playerShare)
+          .then(response => console.log("foi"))
+          .catch(e => console.log(e));
+        }
+      }
+    },
+    data(){
+      return {
+        seasons: null,
+        leagues: null,
+        teams: null,
+        players: null,
+        playerDetail: null,
+        playerStats: null,
+        playerShare: '',
+        teamSelected: '',
+        leagueSelected: '',
+        seasonSelected: ''
+      }
+    },
+    mounted(){
+      this.leagues = ['nhl', 'ahl', 'echl'];
+    }
+  }
+  </script>
