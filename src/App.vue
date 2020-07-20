@@ -5,16 +5,16 @@
     </figure>
     <div class="container pt-3 pb-6">
       <h1 class="title is-2 has-text-centered">Tudo Pela NHL - Hockey Stats</h1>
-      <p class="title is-4 has-text-centered">Find and share all the stats about a player</p>
+      <p class="title is-4 has-text-centered">Encontre e compartilhe as estatísticas de jogadores de hockey</p>
       <!-- form component -->
       <div class="columns search-bar pb-3">
         <div class="column is-3">
           <div class="field">
             <p class="control has-icons-left">
-              <span class="select">
+              <span class="select is-fullwidth">
                 <select name="league" @change="loadLeague">
-                  <option value="" selected>Select League</option>
-                  <option v-for="league in leagues" :value="league">{{league}}</option>
+                  <option value="" selected>Selecione Liga</option>
+                  <option v-for="league in leagues" :value="league">{{league.toUpperCase()}}</option>
                 </select>  
               </span>
               <span class="icon is-small is-left">
@@ -26,10 +26,10 @@
         <div class="column is-3" v-if="leagueSelected">
           <div class="field">
             <p class="control has-icons-left">
-              <span class="select">
-                <select name="league" @change="loadSeason">
-                  <option value="" selected>Select Season</option>
-                  <option v-for="season in seasons" :value="season">{{season}}</option>
+              <span class="select is-fullwidth">
+                <select name="season" @change="loadSeason">
+                  <option value="" selected>Selecione Temporada</option>
+                  <option v-for="season in seasons" :value="season.id">{{(season.years) ? season.years : season.id | shaperYear}}</option>
                 </select> 
               </span>
               <span class="icon is-small is-left">
@@ -41,9 +41,9 @@
         <div class="column is-3" v-if="seasonSelected" >
           <div class="field">
             <p class="control has-icons-left">
-              <span class="select">
+              <span class="select is-fullwidth">
                 <select name="teams" @change="loadTeamPlayers">
-                  <option value="" selected>Select Team</option>
+                  <option value="" selected>Selecione Time</option>
                   <option v-for="team in teams" :value="team.id">{{team.teamCity}} {{team.teamName}}</option>
                 </select>
               </span>
@@ -56,9 +56,9 @@
         <div class="column is-3" v-if="players">
           <div class="field">
             <p class="control has-icons-left">
-              <span class="select">
+              <span class="select is-fullwidth">
                 <select name="selectPlayer" @change="loadPlayerStat">
-                  <option value="" selected>Select Player</option>
+                  <option value="" selected>Selecione Jogador</option>
                   <option v-for="player in players" :value="player.id">{{player.fullName}}</option>
                 </select>
               </span>
@@ -86,7 +86,7 @@
           </span>
         </p>
         <div class="player__stats--table--wrapper mt-5">
-          <table v-if="playerDetail.position != 'G'" class="player__stats--table widefat" border="0" cellpadding="0" cellspacing="0">
+          <table v-if="playerDetail.position !== 'G'" class="player__stats--table widefat" border="0" cellpadding="0" cellspacing="0">
             <tbody>
               <tr>
                 <th class="cell--image" rowspan="3">
@@ -96,30 +96,30 @@
                     </figure>
                   </a>
                 </th>
-                <th title="Total de Jogos">GP</th>
-                <th title="Total de Pontos">PTS</th>
-                <th title="Total de Gols">G</th>
-                <th title="Total de Assistências">A</th>
-                <th title="Total de Mais/Menos">+/-</th>
-                <th title="Tempo ativamente no gelo">TOI</th>
-                <th title="Tempo total de penalidades">PIM</th>
-                <th title="Total de disparos ao gol">SHT</th>
-                <th title="Total de jogadas físicas contra o oponente">HIT</th>
-                <th title="Total de Gols decisivos">GWG</th>
-                <th title="Percentagem de disparos ao gol">SH%</th>
+                <th v-if="playerStats.games" title="Total de Jogos">GP</th>
+                <th v-if="playerStats.points" title="Total de Pontos">PTS</th>
+                <th v-if="playerStats.goals" title="Total de Gols">G</th>
+                <th v-if="playerStats.assists" title="Total de Assistências">A</th>
+                <th v-if="playerStats.plusMinus" title="Total de Mais/Menos">+/-</th>
+                <th v-if="playerStats.timeOnIce" title="Tempo ativamente no gelo">TOI</th>
+                <th v-if="playerStats.pim" title="Tempo total de penalidades">PIM</th>
+                <th v-if="playerStats.shots" title="Total de disparos ao gol">SHT</th>
+                <th v-if="playerStats.hits" title="Total de jogadas físicas contra o oponente">HIT</th>
+                <th v-if="playerStats.gameWinningGoals" title="Total de Gols decisivos">GWG</th>
+                <th v-if="playerStats.shotPct" title="Percentagem de disparos ao gol">SH%</th>
               </tr>
               <tr>
-                <td title="Total de Jogos">{{playerStats.games}}</td>
-                <td title="Total de Pontos">{{playerStats.points}}</td>
-                <td title="Total de Gols">{{playerStats.goals}}</td>
-                <td title="Total de Assistências">{{playerStats.assists}}</td>
-                <td title="Total de Mais/Menos">{{playerStats.plusMinus}}</td>
-                <td title="Tempo ativamente no gelo">{{playerStats.timeOnIce}}</td>
-                <td title="Tempo total de penalidades">{{playerStats.pim}}</td>
-                <td title="Total de disparos ao gol">{{playerStats.shots}}</td>
-                <td title="Total de jogadas físicas contra o oponente">{{playerStats.hits}}</td>
-                <td title="Total de Gols decisivos">{{playerStats.gameWinningGoals}}</td>
-                <td title="Percentagem de disparos ao gol">{{playerStats.shotPct}}</td>
+                <td v-if="playerStats.games" title="Total de Jogos">{{playerStats.games}}</td>
+                <td v-if="playerStats.points" title="Total de Pontos">{{playerStats.points}}</td>
+                <td v-if="playerStats.goals" title="Total de Gols">{{playerStats.goals}}</td>
+                <td v-if="playerStats.assists" title="Total de Assistências">{{playerStats.assists}}</td>
+                <td v-if="playerStats.plusMinus" title="Total de Mais/Menos">{{playerStats.plusMinus}}</td>
+                <td v-if="playerStats.timeOnIce" title="Tempo ativamente no gelo">{{playerStats.timeOnIce}}</td>
+                <td v-if="playerStats.pim" title="Tempo total de penalidades">{{playerStats.pim}}</td>
+                <td v-if="playerStats.shots" title="Total de disparos ao gol">{{playerStats.shots}}</td>
+                <td v-if="playerStats.hits" title="Total de jogadas físicas contra o oponente">{{playerStats.hits}}</td>
+                <td v-if="playerStats.gameWinningGoals" title="Total de Gols decisivos">{{playerStats.gameWinningGoals}}</td>
+                <td v-if="playerStats.shotPct" title="Percentagem de disparos ao gol">{{playerStats.shotPct}}</td>
               </tr>
             </tbody>
           </table>
@@ -133,36 +133,42 @@
                     </figure>
                   </a>
                 </th>
-                <th title="Total de Jogos">GP</th>
-                <th title="Total de Vitórias">W</th>
-                <th title="Total de Derrotas">L</th>
-                <th title="Total de Shutouts">Sh</th>
-                <th title="Média de Gols sofridos">GAA</th>
-                <th title="Porcentagem de Defesas">SV%</th>
+                <th v-if="playerStats.games" title="Total de Jogos">GP</th>
+                <th v-if="playerStats.wins" title="Total de Vitórias">W</th>
+                <th v-if="playerStats.losses" title="Total de Derrotas">L</th>
+                <th v-if="playerStats.shutouts" title="Total de Shutouts">Sh</th>
+                <th v-if="playerStats.goalAgainstAverage" title="Média de Gols sofridos">GAA</th>
+                <th v-if="playerStats.savePercentage" title="Porcentagem de Defesas">SV%</th>
               </tr>
               <tr>
-                <td title="Total de Jogos">{{playerStats.games}}</td>
-                <td title="Total de Vitórias">{{playerStats.wins}}</td>
-                <td title="Total de Derrotas">{{playerStats.losses}}</td>
-                <td title="Total de Shutouts">{{playerStats.shutouts}}</td>
-                <td title="Média de Gols sofridos">{{playerStats.goalAgainstAverage}}</td>
-                <td title="Porcentagem de Defesas">{{playerStats.savePercentage}}</td>
+                <td v-if="playerStats.games" title="Total de Jogos">{{playerStats.games}}</td>
+                <td v-if="playerStats.wins" title="Total de Vitórias">{{playerStats.wins}}</td>
+                <td v-if="playerStats.losses" title="Total de Derrotas">{{playerStats.losses}}</td>
+                <td v-if="playerStats.shutouts" title="Total de Shutouts">{{playerStats.shutouts}}</td>
+                <td v-if="playerStats.goalAgainstAverage" title="Média de Gols sofridos">{{playerStats.goalAgainstAverage}}</td>
+                <td v-if="playerStats.savePercentage" title="Porcentagem de Defesas">{{playerStats.savePercentage}}</td>
               </tr>
             </tbody>
           </table>
         </div>
         <div class="notification is-warning mt-6">
-          <p>Copy and paste the code below to embed this table in your own blog.</p>
+          <p>Copie e cole o código abaixo para inserir dentro do seu próprio blog.</p>
           <div class="field has-addons">
             <div class="control">
               <input v-model="playerShare" class="input has-text-grey-light " type="text" placeholder="" readonly="">
             </div>
             <div class="control">
               <button @click="shareURL" class="button is-info">
-                Copy
+                Copiar
               </button>
             </div>
           </div>
+        </div>
+      </div>
+      <div v-if="errorStats">
+        <div class="has-text-centered mt-6 pt-6">
+          <h3 class="title is-5">Não foi possível encontrar registros com esta filtragem</h3>
+          <p>Tente novamente com outros parâmetros</p>
         </div>
       </div>
     </div>
@@ -351,11 +357,31 @@
     name: 'app',
     methods:{
       async loadLeague(e) {
+        this.playerDetail = null;
+        this.teamSelected = null;
+        this.playerStats = null;
+        this.players = null;
+        this.seasons = null;
+        // this.leagues = null;
+        this.teams = null;
+
         this.leagueSelected = e.target.value;
-        this.teams = await this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/franchises?league=nhl`).then(teams => teams.data);
-        this.seasons = await this.$axios.get('https://statsapi.web.nhl.com/api/v1/seasons').then(seasons => seasons.data.seasons.map(item => item.seasonId).sort((a,b) => b - a));
+        
+        this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/franchises?league=${this.leagueSelected}`).then(teams => {
+          this.teams = teams.data.filter(team => {
+            if (team) {
+              return team;
+            }
+          });
+        });
+
+        this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/seasons?league=${this.leagueSelected}`).then(seasons => {
+          this.seasons = seasons.data.sort((a,b) => b.id - a.id);
+        });
       },
       async loadSeason(e) {
+        this.players = null;
+        this.playerStats = null;
         this.seasonSelected = e.target.value;
       },
       async loadTeamPlayers(e) {
@@ -364,11 +390,16 @@
       },
       async loadPlayerStat(e) {
         this.playerSelected = e.target.value;
-        this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/player?league=nhl&id=${this.playerSelected}`).then(player => {
+        this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/player?league=${this.leagueSelected}&id=${this.playerSelected}`).then(player => {
           this.playerDetail = player.data;
         });
-        this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/playerStats?league=nhl&id=${this.playerSelected}&season=${this.seasonSelected}`).then(stats => {
-          this.playerStats = stats.data;
+        this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/playerStats?league=${this.leagueSelected}&id=${this.playerSelected}&season=${this.seasonSelected}`).then(stats => {
+          if (Object.keys(stats.data).length > 0) {
+            this.playerStats = stats.data;
+            this.errorStats = false;
+          } else {
+            this.errorStats = true;
+          }
         });
 
         const share = btoa(JSON.stringify({
@@ -388,6 +419,11 @@
         }
       }
     },
+    filters: {
+      shaperYear(year) {
+        return year.slice(0, 4) + ' - ' + year.slice(4, 8);
+      }
+    },
     data(){
       return {
         seasons: null,
@@ -396,6 +432,7 @@
         players: null,
         playerDetail: null,
         playerStats: null,
+        errorStats: false,
         playerShare: '',
         teamSelected: '',
         leagueSelected: '',
@@ -403,7 +440,7 @@
       }
     },
     mounted(){
-      this.leagues = ['nhl', 'ahl', 'echl'];
+      this.leagues = ['nhl', 'ahl'];
     }
   }
   </script>
