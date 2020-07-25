@@ -172,6 +172,19 @@
         </div>
       </div>
     </div>
+    <div v-if="isLoading" class='loader loader1'>
+      <div>
+        <div>
+          <div>
+            <div>
+              <div>
+                <div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -349,6 +362,63 @@
     }
   }
 
+  .loader, .loader * {
+    will-change: transform;
+  }
+
+  .loader {
+    position: relative;
+    margin: 75px auto;
+    width: 150px;
+    height: 150px;
+    display: block;
+    overflow: hidden;
+  }
+  .loader div {
+    height: 100%;
+  }
+
+  /* loader 1 */
+  .loader1, .loader1 div {
+    border-radius: 50%;
+    padding: 8px;
+    border: 2px solid transparent;
+    -webkit-animation: rotate linear 3.5s infinite;
+            animation: rotate linear 3.5s infinite;
+    border-top-color: rgba(0, 0, 0, 0.5);
+    border-bottom-color: rgba(0, 0, 255, 0.5);
+  }
+
+
+  @-webkit-keyframes rotate {
+  0% {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+  }
+  50% {
+    -webkit-transform: rotate(180deg);
+            transform: rotate(180deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+  }
+}
+@keyframes rotate {
+  0% {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+  }
+  50% {
+    -webkit-transform: rotate(180deg);
+            transform: rotate(180deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+  }
+}
+
 
   </style>
 
@@ -366,6 +436,8 @@
         this.teams = null;
 
         this.leagueSelected = e.target.value;
+
+        this.isLoading = true;
         
         this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/franchises?league=${this.leagueSelected}`).then(teams => {
           this.teams = teams.data.filter(team => {
@@ -377,6 +449,7 @@
 
         this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/seasons?league=${this.leagueSelected}`).then(seasons => {
           this.seasons = seasons.data.sort((a,b) => b.id - a.id);
+          this.isLoading = false;
         });
       },
       async loadSeason(e) {
@@ -386,10 +459,13 @@
       },
       async loadTeamPlayers(e) {
         this.teamSelected = e.target.value;
+        this.isLoading = true;
         this.players = await this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/franchise?league=${this.leagueSelected}&team=${this.teamSelected}`).then(players => players.data);
+        this.isLoading = false;
       },
       async loadPlayerStat(e) {
         this.playerSelected = e.target.value;
+        this.isLoading = true;
         this.$axios.get(`${process.env.VUE_APP_FIREBASE_URL}/player?league=${this.leagueSelected}&id=${this.playerSelected}`).then(player => {
           this.playerDetail = player.data;
         });
@@ -400,6 +476,7 @@
           } else {
             this.errorStats = true;
           }
+          this.isLoading = false;
         });
 
         const share = btoa(JSON.stringify({
@@ -436,7 +513,8 @@
         playerShare: '',
         teamSelected: '',
         leagueSelected: '',
-        seasonSelected: ''
+        seasonSelected: '',
+        isLoading: false
       }
     },
     mounted(){
